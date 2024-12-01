@@ -1,9 +1,50 @@
+/**
+ * @file maze.c
+ * @brief A simple maze game implemented in C.
+ * 
+ * This program allows the user to play a maze game where they can navigate through different levels,
+ * collect coins and keys, and open doors to progress. The game can be controlled using either WASD keys
+ * or arrow keys, and the user can save and load their progress.
+ * 
+ * The game includes the following features:
+ * - Displaying the maze from a file
+ * - Moving the player character '@' within the maze
+ * - Collecting coins 'o' and keys '>'
+ * - Opening doors '/'
+ * - Saving and loading game progress
+ * - Selecting levels and setting input keys
+ * 
+ * The main functions in this file are:
+ * - printMaze: Prints the maze for a given level from a file.
+ * - isSpace: Checks if a given position in the console is a space or other navigable character.
+ * - isCoin: Checks if a given position in the console contains a coin.
+ * - isKey: Checks if a given position in the console contains a key.
+ * - doorAcces: Checks if a door can be accessed and updates the key count.
+ * - hidecursor: Hides the console cursor.
+ * - gotoxy: Moves the console cursor to a specified position.
+ * - wherex: Returns the current x-coordinate of the console cursor.
+ * - wherey: Returns the current y-coordinate of the console cursor.
+ * - enterInt: Prompts the user to enter an integer within a specified range.
+ * - info: Displays game information such as level, coin count, time, and key count.
+ * - formatInput: Formats the input based on the selected input mode (WASD or arrow keys).
+ * - maze: Main game loop for playing the maze.
+ * - guide: Displays the game guide.
+ * - selectLevel: Allows the user to select a level to play.
+ * - input: Allows the user to set the input keys (WASD or arrow keys).
+ * - main: Main function that displays the main menu and handles user selection.
+ * 
+ * @note This program is designed to run on Windows and uses Windows-specific libraries and functions.
+ * 
+ * @author Jamie Chen
+ * @date DEC.2024
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <conio.h>
 #include <stdbool.h>
 #include <windows.h>
+
 
 void printMaze(int level){
     char filename[20];
@@ -32,7 +73,7 @@ bool isSpace(int x, int y) {
 
     
     if (ReadConsoleOutput(GetStdHandle(STD_OUTPUT_HANDLE), &ci, bufferSize, bufferCoord, &readRegion)) {
-        return ci.Char.AsciiChar == ' ' || ci.Char.AsciiChar == 'o'; 
+        return ci.Char.AsciiChar == ' ' || ci.Char.AsciiChar == 'o'|| ci.Char.AsciiChar == '>'|| ci.Char.AsciiChar == '/'; 
     } else {
         return false; 
     }
@@ -46,6 +87,40 @@ bool isCoin(int x, int y) {
 
     if (ReadConsoleOutput(GetStdHandle(STD_OUTPUT_HANDLE), &ci, bufferSize, bufferCoord, &readRegion)) {
         return ci.Char.AsciiChar == 'o'; 
+    } else {
+        return false; 
+    }
+}
+
+bool isKey(int x, int y) {
+    CHAR_INFO ci;
+    COORD bufferSize = {1, 1}; 
+    COORD bufferCoord = {0, 0}; 
+    SMALL_RECT readRegion = {x, y, x, y}; 
+
+    if (ReadConsoleOutput(GetStdHandle(STD_OUTPUT_HANDLE), &ci, bufferSize, bufferCoord, &readRegion)) {
+        return ci.Char.AsciiChar == '>'; 
+    } else {
+        return false; 
+    }
+}
+
+bool doorAcces(int x, int y, int *key){
+    CHAR_INFO ci;
+    COORD bufferSize = {1, 1}; 
+    COORD bufferCoord = {0, 0}; 
+    SMALL_RECT readRegion = {x, y, x, y}; 
+
+    if (ReadConsoleOutput(GetStdHandle(STD_OUTPUT_HANDLE), &ci, bufferSize, bufferCoord, &readRegion)) {
+        if(ci.Char.AsciiChar == '/'){
+            if(*key>0){
+                (*key)--;
+                return true;
+            }else{
+                return false;
+            }
+        } 
+        else return true; 
     } else {
         return false; 
     }
@@ -100,21 +175,45 @@ int enterInt(int LL, int UL){
     return enterInt;
 }
 
-void info(int saveX1, int saveY1, int level, int coin, int seconds){
+void info(int saveX1, int saveY1, int level, int coin, int seconds, int key){
     gotoxy(saveX1,saveY1);
-    printf("Level: %2d   Coin: %4d  Time: %5d",level,coin,seconds);
+    printf("Level: %2d   Coin: %4d  Time: %5d   Key: %2d",level,coin,seconds,key);
 }
 
+char formatInput(int mode){
+    char move;
+    if(mode==1){
+        move=getch();
+        if(move==-32){
+            getch();
+            return '\0';
+        }else return move;
+        
+    }else if(mode==2){
+        move=getch();
+        if(move==-32){
+            move=getch();
+            if(move==72) return 'w';
+            if(move==80) return 's';
+            if(move==75) return 'a';
+            if(move==77) return 'd';
+        } else if (move == 'w' || move == 'a' || move == 's' || move == 'd') {
+            return '\0';
+        }
+        return move;
+    }
+    return '\0';
+}
 
-void maze(){
+void maze(int inputMode){
     FILE * fp;
-    char buffer[10];
-    int intBuffer;
+    
     int mode=0;
     char move;
     int level=1;
     int coin=0;
     int seconds=0;
+    int key=0;
     int x1=0;
     int y1=40;
     int saveX1=0;
@@ -146,7 +245,7 @@ void maze(){
                     printf("Could not open file");
                     return;
                 }
-                fprintf(fp,"%d %d %d",level,coin,seconds);
+                fprintf(fp,"%d %d %d %d",level,coin,seconds,key);
                 fclose(fp);
                 mode=2;
                 while(getchar()!='\n');
@@ -174,7 +273,7 @@ void maze(){
             printf("Could not open file");
             return;
         }
-        fscanf(fp,"%d %d %d",&level,&coin,&seconds);
+        fscanf(fp,"%d %d %d %d",&level,&coin,&seconds,&key);
         fclose(fp);
 
         
@@ -190,84 +289,99 @@ void maze(){
             
             
             gotoxy(x1,y1);
-            printf("G");
+            printf("@");
             
             while(1){
                 
                 if(kbhit()){
                     
 
-                    move=getch();
-                    if(move=='w'&&isSpace(x1,y1-1)){
+                    move=formatInput(inputMode);
+                    if(move=='w'&&isSpace(x1,y1-1)&&doorAcces(x1,y1-1,&key)){
                         if(isCoin(x1,y1-2)){
                             
                             gotoxy(x1,y1-2);
                             printf(" ");
                             coin++;
-                            info(saveX1,saveY1,level,coin,seconds);
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }else if(isKey(x1,y1-2)){
+                            gotoxy(x1,y1-2);
+                            printf(" ");
+                            key++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
                         }
                         gotoxy(x1,y1);
                         printf(" ");
                         y1-=2;
                         gotoxy(x1,y1);
-                        printf("G");
+                        printf("@");
 
 
                     }
-                    else if(move=='s'&&isSpace(x1,y1+1)){
+                    else if(move=='s'&&isSpace(x1,y1+1)&&doorAcces(x1,y1+1,&key)){
                         if(isCoin(x1,y1+2)){
                             
                             gotoxy(x1,y1+2);
                             printf(" ");
                             coin++;
-                            info(saveX1,saveY1,level,coin,seconds);
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }else if(isKey(x1,y1+2)){
+                            gotoxy(x1,y1+2);
+                            printf(" ");
+                            key++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
                         }
                         gotoxy(x1,y1);
                         printf(" ");
                         y1+=2;
                         gotoxy(x1,y1);
-                        printf("G");
+                        printf("@");
 
                     } 
-                    else if(move=='a'&&isSpace(x1-2,y1)){
+                    else if(move=='a'&&isSpace(x1-2,y1)&&doorAcces(x1-2,y1,&key)){
                         if(isCoin(x1-2,y1)){
                             
                             gotoxy(x1-2,y1);
                             printf(" ");
                             coin++;
-                            info(saveX1,saveY1,level,coin,seconds);
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }else if(isKey(x1-2,y1)){
+                            gotoxy(x1-2,y1);
+                            printf(" ");
+                            key++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
                         }
                         gotoxy(x1,y1);
                         printf(" ");
                         x1-=2;
                         gotoxy(x1,y1);
-                        printf("G");
+                        printf("@");
 
                     } 
-                    else if(move=='d'&&isSpace(x1+2,y1)){
+                    else if(move=='d'&&isSpace(x1+2,y1)&&doorAcces(x1+2,y1,&key)){
                         if(isCoin(x1+2,y1)){
                             
                             gotoxy(x1+2,y1);
                             printf(" ");
                             coin++;
-                            info(saveX1,saveY1,level,coin,seconds);
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }else if(isKey(x1+2,y1)){
+                            gotoxy(x1+2,y1);
+                            printf(" ");
+                            key++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
                         }
                         gotoxy(x1,y1);
                         printf(" ");
                         x1+=2;
                         gotoxy(x1,y1);
-                        printf("G");
+                        printf("@");
 
                     } 
-                    else if(move=='f'){
-                       /* 
-                       gotoxy(x1,y1);
-                       printf("K");
-                       */
-                    }
+                    
                     else if(move=='q'){
                         gotoxy(saveX1,saveY1);
-                        printf("Are you sure you want to quit? (y/n): ");
+                        printf("Are you sure you want to quit? (y/n):                             ");
                         move=getch();
                         while(move!='y'&&move!='n'){
                             move=getch();
@@ -275,7 +389,7 @@ void maze(){
                         if(move=='y') return;
                         else if(move=='n') {
                             gotoxy(saveX1,saveY1);
-                            printf("                                                     \n");
+                            printf("                                                       \n");
                             
                         }
                     }
@@ -285,39 +399,64 @@ void maze(){
 
 
                     if(x1>80&&y1<3){
-                        printf("You Win!");
 
-                        level++;
+                        if(level==10){
+                            system("cls");
+                            printf("You have completed all levels!\n");
+                            printf("Record: %d coins and %d keys in %d seconds\n",coin,key,seconds);
+                            printf("Thanks for playing!\n");
+                            printf("\n");
+                            level=1;
+                            coin=0;
+                            seconds=0;
+                            key=0;
 
-                        fopen("save.txt", "w");
-                        if (fp == NULL){
-                            printf("Could not open file");
+                            fp = fopen("save.txt", "w");
+                            if (fp == NULL){
+                                printf("Could not open file");
+                                return;
+                            }
+                            fprintf(fp,"%d %d %d %d",level,coin,seconds,key);
+                            fclose(fp);
+
+                            printf("Press any key to exit...");
+                            Sleep(2000);
+                            getch();
                             return;
-                        }
-                        fprintf(fp,"%d %d %d",level,coin,seconds);
-                        fclose(fp);
+                        }else{
 
-                        system("cls");
-                        printf("You Win!\n");
-                        printf("Next Level or Exit? (n/e): ");
-                        move=getch();
-                        while(move!='n'&&move!='e'){
+                            level++;
+                            fopen("save.txt", "w");
+                            if (fp == NULL){
+                                printf("Could not open file");
+                                return;
+                            }
+                            fprintf(fp,"%d %d %d %d",level,coin,seconds,key);
+                            fclose(fp);
+
+                            system("cls");
+                            printf("You complete Level %d!\n",level-1);
+                            printf("Record: %d coins and %d keys in %d seconds\n",coin,key,seconds);
+                            printf("Next Level or Exit? (n/e): ");
                             move=getch();
+                            while(move!='n'&&move!='e'){
+                                move=getch();
+                            }
+                            if(move=='n') {
+                                
+                                printMaze(level);
+                                x1=wherex()+2;
+                                y1=wherey()-2;
+                                saveX1=wherex();
+                                saveY1=wherey();
+                                gotoxy(x1,y1);
+                                printf("@");
+                            }
+                            else if(move=='e') {
+                                break;
+                            }
                         }
-                        if(move=='n') {
-                            printMaze(level);
-                            x1=wherex()+2;
-                            y1=wherey()-2;
-                            saveX1=wherex();
-                            saveY1=wherey();
-                            gotoxy(x1,y1);
-                            printf("G");
-                            
-                        }
-                        else if(move=='e') {
-                            break;
-                        }
-
+                        
                         
                     }
                     
@@ -326,7 +465,7 @@ void maze(){
             
                 if(difftime(time(NULL),t)>=1){
                     seconds++;
-                    info(saveX1,saveY1,level,coin,seconds);
+                    info(saveX1,saveY1,level,coin,seconds,key);
                     t=time(NULL);
                 }
 
@@ -344,12 +483,226 @@ void maze(){
 
 }
 
+void guide(){
+    system("cls");
+    printf("#########################\n");
+    printf("#######   Maze   ########\n");
+    printf("#########################\n");
+    printf("1. Use W, A, S, D to move\n");
+    printf("2. Collect coins and keys\n");
+    printf("3.  Open doors with keys \n");
+    printf("4. Coin: o Key: > Door: /\n");
+    printf("5. Reach top right to win\n");
+    printf("6.    Press Q to quit    \n");
+    printf("7.    Enjoy the game!    \n");
+    printf("\n");
+    printf("Press any key to continue...\n");
+    getch();
+    return;
+}
+
+void selectLevel(int inputMode){
+    
+    char move;
+    int level=1;
+    int coin=0;
+    int seconds=0;
+    int key=0;
+    int x1=0;
+    int y1=40;
+    int saveX1=0;
+    int saveY1=0;
+    time_t t;
+
+    system("cls");
+    printf("########################\n");
+    printf("#######   Maze   #######\n");
+    printf("##### Select Level #####\n");
+    printf("#####    0 EXIT    #####\n");
+    printf("########################\n");
+    
+    level=enterInt(0,10);
+    
+    if(level==0) return;
+    printMaze(level);
+    x1=wherex()+2;
+    y1=wherey()-2;
+    saveX1=wherex();
+    saveY1=wherey();
+    gotoxy(x1,y1);
+    printf("@");
 
 
+            while(1){
+                
+                if(kbhit()){
+                    
+
+                    move=formatInput(inputMode);
+                    if(move=='w'&&isSpace(x1,y1-1)&&doorAcces(x1,y1-1,&key)){
+                        if(isCoin(x1,y1-2)){
+                            
+                            gotoxy(x1,y1-2);
+                            printf(" ");
+                            coin++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }else if(isKey(x1,y1-2)){
+                            gotoxy(x1,y1-2);
+                            printf(" ");
+                            key++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }
+                        gotoxy(x1,y1);
+                        printf(" ");
+                        y1-=2;
+                        gotoxy(x1,y1);
+                        printf("@");
+
+
+                    }
+                    else if(move=='s'&&isSpace(x1,y1+1)&&doorAcces(x1,y1+1,&key)){
+                        if(isCoin(x1,y1+2)){
+                            
+                            gotoxy(x1,y1+2);
+                            printf(" ");
+                            coin++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }else if(isKey(x1,y1+2)){
+                            gotoxy(x1,y1+2);
+                            printf(" ");
+                            key++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }
+                        gotoxy(x1,y1);
+                        printf(" ");
+                        y1+=2;
+                        gotoxy(x1,y1);
+                        printf("@");
+
+                    } 
+                    else if(move=='a'&&isSpace(x1-2,y1)&&doorAcces(x1-2,y1,&key)){
+                        if(isCoin(x1-2,y1)){
+                            
+                            gotoxy(x1-2,y1);
+                            printf(" ");
+                            coin++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }else if(isKey(x1-2,y1)){
+                            gotoxy(x1-2,y1);
+                            printf(" ");
+                            key++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }
+                        gotoxy(x1,y1);
+                        printf(" ");
+                        x1-=2;
+                        gotoxy(x1,y1);
+                        printf("@");
+
+                    } 
+                    else if(move=='d'&&isSpace(x1+2,y1)&&doorAcces(x1+2,y1,&key)){
+                        if(isCoin(x1+2,y1)){
+                            
+                            gotoxy(x1+2,y1);
+                            printf(" ");
+                            coin++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }else if(isKey(x1+2,y1)){
+                            gotoxy(x1+2,y1);
+                            printf(" ");
+                            key++;
+                            info(saveX1,saveY1,level,coin,seconds,key);
+                        }
+                        gotoxy(x1,y1);
+                        printf(" ");
+                        x1+=2;
+                        gotoxy(x1,y1);
+                        printf("@");
+
+                    } 
+                    
+                    else if(move=='q'){
+                        gotoxy(saveX1,saveY1);
+                        printf("Are you sure you want to quit? (y/n):                             ");
+                        move=getch();
+                        while(move!='y'&&move!='n'){
+                            move=getch();
+                        }
+                        if(move=='y') return;
+                        else if(move=='n') {
+                            gotoxy(saveX1,saveY1);
+                            printf("                                                       \n");
+                            
+                        }
+                    }
+
+                
+                    
+
+
+                    if(x1>80&&y1<3){
+                        system("cls");
+                        printf("You complete Level %d!\n",level);
+                        printf("Record: %d coins and %d keys in %d seconds\n",coin,key,seconds);
+                        printf("Thanks for playing!\n");
+                        printf("\n");
+                        printf("Press any key to exit...");
+                        Sleep(2000);
+                        getch();
+                        return;
+                    
+                    }
+                    
+                    
+                }
+            
+                if(difftime(time(NULL),t)>=1){
+                    seconds++;
+                    info(saveX1,saveY1,level,coin,seconds,key);
+                    t=time(NULL);
+                }
+
+            }
+            
+    
+
+
+    return;
+}
+
+void input(int *inputMode){
+    int mode=0;
+    system("cls");
+    printf("########################\n");
+    printf("######   Maze   ########\n");
+    printf("#### Set input keys ####\n");
+    printf("##### 1 WASD Key  ######\n");
+    printf("##### 2 Arrow Key ######\n");
+    printf("##### 3   EXIT    ######\n");
+    printf("########################\n");
+    mode=enterInt(1,3);
+    if(mode==1){
+        *inputMode=1;
+        printf("WASD keys set!\n");
+        printf("Press any key to continue...");
+        getch();
+        return;
+    }
+    if(mode==2){
+        *inputMode=2;
+        printf("Arrow keys set!\n");
+        printf("Press any key to continue...");
+        getch();
+        return;
+    }
+    if(mode==3) return;
+    return;
+}
 
 int main(){
 
     int mode=0;
+    int inputMode=1;
     hidecursor();
     
 
@@ -360,32 +713,34 @@ int main(){
         system("cls");
         printf("########################\n");
         printf("#######   Maze   #######\n");
-        printf("####### 1  Play  #######\n");
-        printf("####### 2 *****  #######\n");
-        printf("####### 3  ***   #######\n");
-        printf("####### 4 ****** #######\n");
-        printf("####### 5  Exit  #######\n");
+        printf("#### 1     Play     ####\n");
+        printf("#### 2 Select Level ####\n");
+        printf("#### 3 How to play? ####\n");
+        printf("#### 4   Set input  ####\n");
+        printf("#### 5     Exit     ####\n");
         printf("########################\n");
         mode=enterInt(1,5);
+        if(mode==1){
+            maze(inputMode);
+            mode=0;
+        }
+
+        if(mode==2){
+            selectLevel(inputMode);
+            mode=0;
+        }
+        
+        if(mode==3) {
+            guide();
+            mode=0;
+        }
+
+        if(mode==4) {
+            input(&inputMode);
+            mode=0;
+        }
+
         if(mode==5) return 0;
-        
-        if(mode==1)maze();
-        mode=0;
-        
-
-
-
-        
-
-        
-
-
-
-
-
-
-
-
 
 
     }
