@@ -530,7 +530,6 @@ void guide(){
     return;
 }
 
-
 void selectLevel(int inputMode){
     
     int mode;
@@ -876,7 +875,6 @@ void selectLevel(int inputMode){
     return;
 }
 
-
 void input(int *inputMode){
     int mode=0;
     system("cls");
@@ -929,10 +927,7 @@ int main(){
     int inputMode=1;
     hidecursor();
     
-
     while(mode==0){
-
-
 
         system("cls");
         printf("########################\n");
@@ -971,10 +966,7 @@ int main(){
             mode=0;
         }
 
-
     }
-
-
 
     return 0;
 }

@@ -17,6 +17,7 @@ void print_maze_from_file(const char *filename) {
 }
 
 int main() {
+    system("cls");
     print_maze_from_file("map.txt");
     return 0;
 }
