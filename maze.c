@@ -48,7 +48,7 @@
 
 void printMaze(int level){
     char filename[20];
-    sprintf(filename,"level%d.txt",level);
+    sprintf(filename,"./levelMap/level%d.txt",level);
     system("cls");
     FILE *fp = fopen(filename, "r");
     if (fp == NULL) {
@@ -67,7 +67,7 @@ void printMaze(int level){
 
 void printAns(int level){
     char filename[20];
-    sprintf(filename,"ans%d.txt",level);
+    sprintf(filename,"./ansMap/ans%d.txt",level);
     system("cls");
     FILE *fp = fopen(filename, "r");
     if (fp == NULL) {
