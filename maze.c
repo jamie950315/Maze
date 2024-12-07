@@ -153,6 +153,13 @@ void hidecursor()
    SetConsoleCursorInfo(consoleHandle, &info);
 }
 
+void setFullScreen() {
+    keybd_event(VK_MENU, 0x38, 0, 0);
+    keybd_event(VK_RETURN, 0x1c, 0, 0);
+    keybd_event(VK_RETURN, 0x1c, KEYEVENTF_KEYUP, 0);
+    keybd_event(VK_MENU, 0x38, KEYEVENTF_KEYUP, 0);
+}
+
 void gotoxy(int x, int y) {
     COORD coord;
     coord.X = x;
@@ -1052,9 +1059,12 @@ void credit(){
 
 int main(){
 
+    setFullScreen();
+    hidecursor();
+
     int mode=0;
     int inputMode=1;
-    hidecursor();
+    
     
     while(mode==0){
 
