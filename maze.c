@@ -92,7 +92,7 @@ bool isSpace(int x, int y) {
 
     
     if (ReadConsoleOutput(GetStdHandle(STD_OUTPUT_HANDLE), &ci, bufferSize, bufferCoord, &readRegion)) {
-        return ci.Char.AsciiChar == ' ' || ci.Char.AsciiChar == 'o'|| ci.Char.AsciiChar == '>'|| ci.Char.AsciiChar == '/'; 
+        return ci.Char.AsciiChar == ' ' || ci.Char.AsciiChar == 'o'|| ci.Char.AsciiChar == '>'|| ci.Char.AsciiChar == '/'|| ci.Char.AsciiChar == '@'|| ci.Char.AsciiChar == '$'; 
     } else {
         return false; 
     }
@@ -194,9 +194,14 @@ int enterInt(int LL, int UL){
     return enterInt;
 }
 
-void info(int saveX1, int saveY1, int level, int coin, int seconds, int key){
+void info(int saveX1, int saveY1, int level, int coin, int seconds, int key, int step){
     gotoxy(saveX1,saveY1);
-    printf("Level: %2d   Coin: %4d  Time: %5d   Key: %2d",level,coin,seconds,key);
+    printf("Level: %2d   Coin: %4d  Time: %5d   Key: %2d    Step: %4d",level,coin,seconds,key,step);
+}
+
+void infoDual(int saveX1, int saveY1, int level, int coin, int seconds, int key, int coin2, int key2){
+    gotoxy(saveX1,saveY1);
+    printf("Level:%2d  Time: %3d  P1Coin: %2d  P1Key: %2d  P2Coin: %2d  P2Key: %2d",level,seconds,coin,key,coin2,key2);
 }
 
 char formatInput(int mode){
@@ -234,6 +239,7 @@ char formatInput(int mode){
     return '\0';
 }
 
+
 void maze(int inputMode){
     FILE * fp;
     
@@ -247,6 +253,11 @@ void maze(int inputMode){
     int y1=40;
     int saveX1=0;
     int saveY1=0;
+
+    int stepPath[10]={170,176,134,174,174,228,164,324,202,194};
+    int stepBest[10]={10000,10000,10000,10000,10000,10000,10000,10000,10000,10000};
+
+    int step=0;
 
     time_t t;
     
@@ -276,6 +287,17 @@ void maze(int inputMode){
                 }
                 fprintf(fp,"%d %d %d %d",level,coin,seconds,key);
                 fclose(fp);
+
+                fp = fopen("stepBest.txt", "w");
+                if (fp == NULL){
+                    printf("Could not open file");
+                    return;
+                }
+                for(int i=0;i<10;i++){
+                    fprintf(fp,"%d ",stepBest[i]);
+                }
+                fclose(fp);
+
                 mode=2;
                 while(getchar()!='\n');
             }
@@ -305,6 +327,16 @@ void maze(int inputMode){
         fscanf(fp,"%d %d %d %d",&level,&coin,&seconds,&key);
         fclose(fp);
 
+        fp = fopen("stepBest.txt", "r");
+        if (fp == NULL){
+            printf("Could not open file");
+            return;
+        }
+        for(int i=0;i<10;i++){
+            fscanf(fp,"%d ",&stepBest[i]);
+        }
+        fclose(fp);
+
         
         printMaze(level);
         
@@ -332,18 +364,20 @@ void maze(int inputMode){
                             gotoxy(x1,y1-2);
                             printf(" ");
                             coin++;
-                            info(saveX1,saveY1,level,coin,seconds,key);
+                            
                         }else if(isKey(x1,y1-2)){
                             gotoxy(x1,y1-2);
                             printf(" ");
                             key++;
-                            info(saveX1,saveY1,level,coin,seconds,key);
+                            
                         }
                         gotoxy(x1,y1);
                         printf(" ");
                         y1-=2;
                         gotoxy(x1,y1);
                         printf("@");
+                        step++;
+                        info(saveX1,saveY1,level,coin,seconds,key,step);
 
 
                     }
@@ -353,18 +387,20 @@ void maze(int inputMode){
                             gotoxy(x1,y1+2);
                             printf(" ");
                             coin++;
-                            info(saveX1,saveY1,level,coin,seconds,key);
+                            
                         }else if(isKey(x1,y1+2)){
                             gotoxy(x1,y1+2);
                             printf(" ");
                             key++;
-                            info(saveX1,saveY1,level,coin,seconds,key);
+                            
                         }
                         gotoxy(x1,y1);
                         printf(" ");
                         y1+=2;
                         gotoxy(x1,y1);
                         printf("@");
+                        step++;
+                        info(saveX1,saveY1,level,coin,seconds,key,step);
 
                     } 
                     else if(move=='a'&&isSpace(x1-2,y1)&&doorAcces(x1-2,y1,&key)){
@@ -373,18 +409,20 @@ void maze(int inputMode){
                             gotoxy(x1-2,y1);
                             printf(" ");
                             coin++;
-                            info(saveX1,saveY1,level,coin,seconds,key);
+                            
                         }else if(isKey(x1-2,y1)){
                             gotoxy(x1-2,y1);
                             printf(" ");
                             key++;
-                            info(saveX1,saveY1,level,coin,seconds,key);
+                            
                         }
                         gotoxy(x1,y1);
                         printf(" ");
                         x1-=2;
                         gotoxy(x1,y1);
                         printf("@");
+                        step++;
+                        info(saveX1,saveY1,level,coin,seconds,key,step);
 
                     } 
                     else if(move=='d'&&isSpace(x1+2,y1)&&doorAcces(x1+2,y1,&key)){
@@ -393,18 +431,20 @@ void maze(int inputMode){
                             gotoxy(x1+2,y1);
                             printf(" ");
                             coin++;
-                            info(saveX1,saveY1,level,coin,seconds,key);
+                            
                         }else if(isKey(x1+2,y1)){
                             gotoxy(x1+2,y1);
                             printf(" ");
                             key++;
-                            info(saveX1,saveY1,level,coin,seconds,key);
+                            
                         }
                         gotoxy(x1,y1);
                         printf(" ");
                         x1+=2;
                         gotoxy(x1,y1);
                         printf("@");
+                        step++;
+                        info(saveX1,saveY1,level,coin,seconds,key,step);
 
                     } 
                     
@@ -415,30 +455,44 @@ void maze(int inputMode){
                         while(move!='y'&&move!='n'){
                             move=getch();
                         }
-                        if(move=='y') return;
-                        else if(move=='n') {
-                            gotoxy(saveX1,saveY1);
-                            printf("                                                       \n");
-                            
+                        if(move=='y'){
+                            printf("\nSave before exit? (y/n): ");
+                            move=getch();
+                            while(move!='y'&&move!='n'){
+                                move=getch();
+                            }
+                            if(move=='y'){
+                                fp = fopen("save.txt", "w");
+                                if (fp == NULL){
+                                    printf("Could not open file");
+                                    return;
+                                }
+                                fprintf(fp,"%d %d %d %d",level,coin,seconds,key);
+                                fclose(fp);
+                            }
+                            return;
                         }
+                        
+                        gotoxy(saveX1,saveY1);
+                        printf("                                                       \n");
+                            
+                        
                     }
 
                 
-                    
-
-
                     if(x1>80&&y1<3){
 
                         if(level==10){
                             system("cls");
                             printf("You have completed all levels!\n");
-                            printf("Record: %d coins and %d keys in %d seconds\n",coin,key,seconds);
+                            printf("Record: %d coins and %d keys in %d seconds and %d steps!\n",coin,key,seconds,step);
                             printf("Thanks for playing!\n");
                             printf("\n");
                             level=1;
                             coin=0;
                             seconds=0;
                             key=0;
+                            
 
                             fp = fopen("save.txt", "w");
                             if (fp == NULL){
@@ -448,12 +502,14 @@ void maze(int inputMode){
                             fprintf(fp,"%d %d %d %d",level,coin,seconds,key);
                             fclose(fp);
 
+
                             printf("Press any key to exit...");
                             Sleep(2000);
                             getch();
                             return;
                         }else{
 
+                            
                             level++;
                             fopen("save.txt", "w");
                             if (fp == NULL){
@@ -465,7 +521,23 @@ void maze(int inputMode){
 
                             system("cls");
                             printf("You complete Level %d!\n",level-1);
-                            printf("Record: %d coins and %d keys in %d seconds\n",coin,key,seconds);
+                            printf("Record: %d coins and %d keys in %d seconds and %d steps!\n",coin,key,seconds,step);
+                            printf("Shortest path: %d steps\n",stepPath[level-2]);
+                            if(step<stepBest[level-2]){
+                                stepBest[level-2]=step;
+                                fp = fopen("stepBest.txt", "w");
+                                if (fp == NULL){
+                                    printf("Could not open file");
+                                    return;
+                                }
+                                for(int i=0;i<10;i++){
+                                    fprintf(fp,"%d ",stepBest[i]);
+                                }
+                                fclose(fp);
+                                printf("New record! %d steps!\n",stepBest[level-2]);
+                            }else{
+                                printf("Best record: %d steps\n",stepBest[level-2]);
+                            }
                             printf("Next Level or Exit? (n/e): ");
                             move=getch();
                             while(move!='n'&&move!='e'){
@@ -473,6 +545,7 @@ void maze(int inputMode){
                             }
                             if(move=='n') {
                                 
+                                step=0;
                                 printMaze(level);
                                 x1=wherex()+2;
                                 y1=wherey()-2;
@@ -494,7 +567,7 @@ void maze(int inputMode){
             
                 if(difftime(time(NULL),t)>=1){
                     seconds++;
-                    info(saveX1,saveY1,level,coin,seconds,key);
+                    info(saveX1,saveY1,level,coin,seconds,key,step);
                     t=time(NULL);
                 }
 
@@ -532,6 +605,8 @@ void guide(){
 
 void selectLevel(int inputMode){
     
+    FILE *fp;
+
     int mode;
     char move;
     int level=1;
@@ -547,6 +622,13 @@ void selectLevel(int inputMode){
     bool dual=false;
     int x2=100;
     int y2=100;
+    int coin2=0;
+    int key2=0;
+
+    int stepPath[10]={170,176,134,174,174,228,164,324,202,194};
+    int stepBest[10]={10000,10000,10000,10000,10000,10000,10000,10000,10000,10000};
+
+    int step=0;
 
     system("cls");
     printf("########################\n");
@@ -567,6 +649,16 @@ void selectLevel(int inputMode){
         system("cls");
         printf("Select level (1~10)");
         level=enterInt(1,10);
+
+        fp = fopen("stepBest.txt", "r");
+        if (fp == NULL){
+            printf("Could not open file");
+            return;
+        }
+        for(int i=0;i<10;i++){
+            fscanf(fp,"%d ",&stepBest[i]);
+        }
+        fclose(fp);
 
         printMaze(level);
         x1 = wherex() + 2;
@@ -597,14 +689,14 @@ void selectLevel(int inputMode){
                         gotoxy(x1, y1 - 2);
                         printf(" ");
                         coin++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        
                     }
                     else if (isKey(x1, y1 - 2))
                     {
                         gotoxy(x1, y1 - 2);
                         printf(" ");
                         key++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        
                     }
                     gotoxy(x1, y1);
                     printf(" ");
@@ -615,6 +707,9 @@ void selectLevel(int inputMode){
                     y1 -= 2;
                     gotoxy(x1, y1);
                     printf("@");
+                    step++;
+                    if(dual)infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
+                    else info(saveX1, saveY1, level, coin, seconds, key, step);
                 }
                 else if (move == 's' && isSpace(x1, y1 + 1) && doorAcces(x1, y1 + 1, &key))
                 {
@@ -624,14 +719,14 @@ void selectLevel(int inputMode){
                         gotoxy(x1, y1 + 2);
                         printf(" ");
                         coin++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        
                     }
                     else if (isKey(x1, y1 + 2))
                     {
                         gotoxy(x1, y1 + 2);
                         printf(" ");
                         key++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        
                     }
                     gotoxy(x1, y1);
                     printf(" ");
@@ -642,6 +737,9 @@ void selectLevel(int inputMode){
                     y1 += 2;
                     gotoxy(x1, y1);
                     printf("@");
+                    step++;
+                    if(dual)infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
+                    else info(saveX1, saveY1, level, coin, seconds, key, step);
                 }
                 else if (move == 'a' && isSpace(x1 - 2, y1) && doorAcces(x1 - 2, y1, &key))
                 {
@@ -651,14 +749,14 @@ void selectLevel(int inputMode){
                         gotoxy(x1 - 2, y1);
                         printf(" ");
                         coin++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        
                     }
                     else if (isKey(x1 - 2, y1))
                     {
                         gotoxy(x1 - 2, y1);
                         printf(" ");
                         key++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        
                     }
                     gotoxy(x1, y1);
                     printf(" ");
@@ -669,6 +767,9 @@ void selectLevel(int inputMode){
                     x1 -= 2;
                     gotoxy(x1, y1);
                     printf("@");
+                    step++;
+                    if(dual)infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
+                    else info(saveX1, saveY1, level, coin, seconds, key, step);
                 }
                 else if (move == 'd' && isSpace(x1 + 2, y1) && doorAcces(x1 + 2, y1, &key))
                 {
@@ -678,14 +779,14 @@ void selectLevel(int inputMode){
                         gotoxy(x1 + 2, y1);
                         printf(" ");
                         coin++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        
                     }
                     else if (isKey(x1 + 2, y1))
                     {
                         gotoxy(x1 + 2, y1);
                         printf(" ");
                         key++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        
                     }
                     gotoxy(x1, y1);
                     printf(" ");
@@ -696,25 +797,28 @@ void selectLevel(int inputMode){
                     x1 += 2;
                     gotoxy(x1, y1);
                     printf("@");
+                    step++;
+                    if(dual)infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
+                    else info(saveX1, saveY1, level, coin, seconds, key, step);
                 }
 
                 if(dual){
-                    if (move == 'o' && isSpace(x2, y2 - 1) && doorAcces(x2, y2 - 1, &key))
+                    if (move == 'o' && isSpace(x2, y2 - 1) && doorAcces(x2, y2 - 1, &key2))
                     {
                         if (isCoin(x2, y2 - 2))
                         {
 
                             gotoxy(x2, y2 - 2);
                             printf(" ");
-                            coin++;
-                            info(saveX1, saveY1, level, coin, seconds, key);
+                            coin2++;
+                            infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
                         }
                         else if (isKey(x2, y2 - 2))
                         {
                             gotoxy(x2, y2 - 2);
                             printf(" ");
-                            key++;
-                            info(saveX1, saveY1, level, coin, seconds, key);
+                            key2++;
+                            infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
                         }
                         gotoxy(x2, y2);
                         printf(" ");
@@ -724,22 +828,22 @@ void selectLevel(int inputMode){
                         gotoxy(x2, y2);
                         printf("$");
                     }
-                    else if (move == 'l' && isSpace(x2, y2 + 1) && doorAcces(x2, y2 + 1, &key))
+                    else if (move == 'l' && isSpace(x2, y2 + 1) && doorAcces(x2, y2 + 1, &key2))
                 {
                     if (isCoin(x2, y2 + 2))
                     {
 
                         gotoxy(x2, y2 + 2);
                         printf(" ");
-                        coin++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        coin2++;
+                        infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
                     }
                     else if (isKey(x2, y2 + 2))
                     {
                         gotoxy(x2, y2 + 2);
                         printf(" ");
-                        key++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        key2++;
+                        infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
                     }
                     gotoxy(x2, y2);
                     printf(" ");
@@ -749,22 +853,22 @@ void selectLevel(int inputMode){
                     gotoxy(x2, y2);
                     printf("$");
                 }
-                    else if (move == 'k' && isSpace(x2 - 2, y2) && doorAcces(x2 - 2, y2, &key))
+                    else if (move == 'k' && isSpace(x2 - 2, y2) && doorAcces(x2 - 2, y2, &key2))
                 {
                     if (isCoin(x2 - 2, y2))
                     {
 
                         gotoxy(x2 - 2, y2);
                         printf(" ");
-                        coin++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        coin2++;
+                        infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
                     }
                     else if (isKey(x2 - 2, y2))
                     {
                         gotoxy(x2 - 2, y2);
                         printf(" ");
-                        key++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        key2++;
+                        infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
                     }
                     gotoxy(x2, y2);
                     printf(" ");
@@ -774,22 +878,22 @@ void selectLevel(int inputMode){
                     gotoxy(x2, y2);
                     printf("$");
                 }
-                    else if (move == ';' && isSpace(x2 + 2, y2) && doorAcces(x2 + 2, y2, &key))
+                    else if (move == ';' && isSpace(x2 + 2, y2) && doorAcces(x2 + 2, y2, &key2))
                 {
                     if (isCoin(x2 + 2, y2))
                     {
 
                         gotoxy(x2 + 2, y2);
                         printf(" ");
-                        coin++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        coin2++;
+                        infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
                     }
                     else if (isKey(x2 + 2, y2))
                     {
                         gotoxy(x2 + 2, y2);
                         printf(" ");
-                        key++;
-                        info(saveX1, saveY1, level, coin, seconds, key);
+                        key2++;
+                        infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
                     }
                     gotoxy(x2, y2);
                     printf(" ");
@@ -823,9 +927,33 @@ void selectLevel(int inputMode){
                 if (x1 > 80 && y1 < 3)
                 {
                     system("cls");
-                    if(dual)printf("Player 1 wins!\n");
-                    else printf("You complete Level %d!\n", level);
-                    printf("Record: %d coins and %d keys in %d seconds\n", coin, key, seconds);
+                    if(dual){
+                        printf("Player 1 wins!\n");
+                        printf("Player 1: %d coins and %d keys in %d seconds\n", coin, key, seconds);
+                        printf("Player 2: %d coins and %d keys\n", coin2, key2);
+                    } 
+                    else{
+                        printf("You complete Level %d!\n", level);
+                        printf("Record: %d coins and %d keys in %d seconds and %d steps!\n",coin,key,seconds,step);
+                        printf("Shortest path: %d steps\n",stepPath[level-1]);
+                            if(step<stepBest[level-1]){
+                                stepBest[level-1]=step;
+                                fp = fopen("stepBest.txt", "w");
+                                if (fp == NULL){
+                                    printf("Could not open file");
+                                    return;
+                                }
+                                for(int i=0;i<10;i++){
+                                    fprintf(fp,"%d ",stepBest[i]);
+                                }
+                                fclose(fp);
+                                printf("New record! %d steps!\n",stepBest[level-1]);
+                            }else{
+                                printf("Best record: %d steps\n",stepBest[level-1]);
+                            }
+                    } 
+                    
+                    
                     printf("Thanks for playing!\n");
                     printf("\n");
                     printf("Press any key to exit...");
@@ -837,7 +965,8 @@ void selectLevel(int inputMode){
                 {
                     system("cls");
                     printf("Player 2 wins!\n");
-                    printf("Record: %d coins and %d keys in %d seconds\n", coin, key, seconds);
+                    printf("Player 1: %d coins and %d keys in %d seconds\n", coin, key);
+                    printf("Player 2: %d coins and %d keys in %d seconds\n", coin2, key2, seconds);
                     printf("Thanks for playing!\n");
                     printf("\n");
                     printf("Press any key to exit...");
@@ -850,8 +979,9 @@ void selectLevel(int inputMode){
             if (difftime(time(NULL), t) >= 1)
             {
                 seconds++;
-                info(saveX1, saveY1, level, coin, seconds, key);
-                t = time(NULL);
+                if(dual)infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
+                else info(saveX1, saveY1, level, coin, seconds, key, step);
+                t=time(NULL);
             }
         }
     }
