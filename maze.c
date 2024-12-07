@@ -1,43 +1,42 @@
 /**
  * @file maze.c
- * @brief A simple maze game implemented in C.
+ * @brief Maze game implementation in C.
  * 
- * This program allows the user to play a maze game where they can navigate through different levels,
- * collect coins and keys, and open doors to progress. The game can be controlled using either WASD keys
- * or arrow keys, and the user can save and load their progress.
+ * This file contains the implementation of a maze game where the player navigates through
+ * different levels, collects coins and keys, and opens doors to reach the exit. The game
+ * supports single-player and dual-player modes.
  * 
- * The game includes the following features:
- * - Displaying the maze from a file
- * - Moving the player character '@' within the maze
- * - Collecting coins 'o' and keys '>'
- * - Opening doors '/'
- * - Saving and loading game progress
- * - Selecting levels and setting input keys
+ * The game uses the console for input and output, and the maze levels and answers are stored
+ * in external text files.
  * 
- * The main functions in this file are:
- * - printMaze: Prints the maze for a given level from a file.
- * - isSpace: Checks if a given position in the console is a space or other navigable character.
- * - isCoin: Checks if a given position in the console contains a coin.
- * - isKey: Checks if a given position in the console contains a key.
+ * The main functions in this file include:
+ * - printMaze: Prints the maze for a given level.
+ * - printAns: Prints the answer map for a given level.
+ * - isSpace: Checks if a given console coordinate is a space or other navigable character.
+ * - isCoin: Checks if a given console coordinate contains a coin.
+ * - isKey: Checks if a given console coordinate contains a key.
  * - doorAcces: Checks if a door can be accessed and updates the key count.
  * - hidecursor: Hides the console cursor.
- * - gotoxy: Moves the console cursor to a specified position.
+ * - gotoxy: Moves the console cursor to a specified coordinate.
  * - wherex: Returns the current x-coordinate of the console cursor.
  * - wherey: Returns the current y-coordinate of the console cursor.
  * - enterInt: Prompts the user to enter an integer within a specified range.
- * - info: Displays game information such as level, coin count, time, and key count.
- * - formatInput: Formats the input based on the selected input mode (WASD or arrow keys).
- * - maze: Main game loop for playing the maze.
+ * - info: Displays game information such as level, coin count, time, key count, and steps.
+ * - infoDual: Displays game information for dual-player mode.
+ * - formatInput: Formats the input based on the selected input mode.
+ * - maze: Main game loop for the maze game.
  * - guide: Displays the game guide.
- * - selectLevel: Allows the user to select a level to play.
- * - input: Allows the user to set the input keys (WASD or arrow keys).
+ * - selectLevel: Allows the player to select a level to play.
+ * - input: Sets the input mode for the game.
+ * - credit: Displays the game credits.
  * - main: Main function that displays the main menu and handles user selection.
  * 
- * @note This program is designed to run on Windows and uses Windows-specific libraries and functions.
+ * @note The game uses the Windows API for console manipulation and is intended to be run on Windows.
  * 
  * @author Jamie Chen
- * @date DEC.2024
+ * @date December 2024
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
