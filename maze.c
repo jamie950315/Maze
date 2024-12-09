@@ -265,6 +265,9 @@ void maze(int inputMode){
 
     int step=0;
 
+    int prevX=100;
+    int prevY=100;
+
     time_t t;
     
     system("cls");
@@ -291,7 +294,7 @@ void maze(int inputMode){
                     printf("Could not open file");
                     return;
                 }
-                fprintf(fp,"%d %d %d %d",level,coin,seconds,key);
+                fprintf(fp,"%d %d %d %d %d %d %d",level,coin,seconds,key,prevX,prevY,step);
                 fclose(fp);
 
                 fp = fopen("stepBest.txt", "w");
@@ -330,7 +333,7 @@ void maze(int inputMode){
             printf("Could not open file");
             return;
         }
-        fscanf(fp,"%d %d %d %d",&level,&coin,&seconds,&key);
+        fscanf(fp,"%d %d %d %d %d %d %d",&level,&coin,&seconds,&key,&prevX,&prevY,&step);
         fclose(fp);
 
         fp = fopen("stepBest.txt", "r");
@@ -346,9 +349,17 @@ void maze(int inputMode){
         
         printMaze(level);
         
-     
-            x1=wherex()+2;
-            y1=wherey()-2;
+            if(prevX==100&&prevY==100){
+                x1=wherex()+2;
+                y1=wherey()-2;
+            }else{
+                x1=prevX;
+                y1=prevY;
+            }
+
+            prevX=100;
+            prevY=100;
+                
             saveX1=wherex();
             saveY1=wherey();
 
@@ -357,6 +368,7 @@ void maze(int inputMode){
             
             gotoxy(x1,y1);
             printf("@");
+            info(saveX1,saveY1,level,coin,seconds,key,step);
             
             while(1){
                 
@@ -473,7 +485,7 @@ void maze(int inputMode){
                                     printf("Could not open file");
                                     return;
                                 }
-                                fprintf(fp,"%d %d %d %d",level,coin,seconds,key);
+                                fprintf(fp,"%d %d %d %d %d %d %d",level,coin,seconds,key,x1,y1,step);
                                 fclose(fp);
                             }
                             return;
@@ -481,8 +493,8 @@ void maze(int inputMode){
                         
                         gotoxy(saveX1,saveY1);
                         printf("                                                       \n");
-                            
-                        
+                        info(saveX1,saveY1,level,coin,seconds,key,step);
+
                     }
 
                 
@@ -498,6 +510,7 @@ void maze(int inputMode){
                             coin=0;
                             seconds=0;
                             key=0;
+                            step=0;
                             
 
                             fp = fopen("save.txt", "w");
@@ -505,7 +518,7 @@ void maze(int inputMode){
                                 printf("Could not open file");
                                 return;
                             }
-                            fprintf(fp,"%d %d %d %d",level,coin,seconds,key);
+                            fprintf(fp,"%d %d %d %d %d %d %d",level,coin,seconds,key,prevX,prevY,step);
                             fclose(fp);
 
 
@@ -515,15 +528,7 @@ void maze(int inputMode){
                             return;
                         }else{
 
-                            
                             level++;
-                            fopen("save.txt", "w");
-                            if (fp == NULL){
-                                printf("Could not open file");
-                                return;
-                            }
-                            fprintf(fp,"%d %d %d %d",level,coin,seconds,key);
-                            fclose(fp);
 
                             system("cls");
                             printf("You complete Level %d!\n",level-1);
@@ -544,6 +549,17 @@ void maze(int inputMode){
                             }else{
                                 printf("Best record: %d steps\n",stepBest[level-2]);
                             }
+                            
+                            fopen("save.txt", "w");
+                            step=0;
+                            
+                            if (fp == NULL){
+                                printf("Could not open file");
+                                return;
+                            }
+                            fprintf(fp,"%d %d %d %d %d %d %d",level,coin,seconds,key,prevX,prevY,step);
+                            fclose(fp);
+
                             printf("Next Level or Exit? (n/e): ");
                             move=getch();
                             while(move!='n'&&move!='e'){
@@ -677,6 +693,8 @@ void selectLevel(int inputMode){
             x2 = x1;
             y2 = y1;
         }
+        if(dual)infoDual(saveX1, saveY1, level, coin, seconds, key, coin2, key2);
+        else info(saveX1, saveY1, level, coin, seconds, key, step);
 
         while (1)
         {
@@ -971,7 +989,7 @@ void selectLevel(int inputMode){
                 {
                     system("cls");
                     printf("Player 2 wins!\n");
-                    printf("Player 1: %d coins and %d keys in %d seconds\n", coin, key);
+                    printf("Player 1: %d coins and %d keys\n", coin, key);
                     printf("Player 2: %d coins and %d keys in %d seconds\n", coin2, key2, seconds);
                     printf("Thanks for playing!\n");
                     printf("\n");
